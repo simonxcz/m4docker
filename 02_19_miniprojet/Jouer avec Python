@@ -1,0 +1,25 @@
+# Jouer avec Python
+
+Nous allons jouer avec Python 3 pour manipuler des fichiers Yaml...
+
+D'abord, ins taller Python 3 (laissé en exercice si Python 3 n'est pas présent)
+
+Ensuite, installer pip3
+
+Ensuite, installer le package PyYaml
+
+Enfain, jouons avec Python3...
+
+Lancer la commande 'python3'
+
+Exécuter la commande 'import yaml'
+
+Exécuter ensuite les commandes suivantes (l'indentation est importante !)
+
+```python
+with open('docker-compose.yml', 'r') as fichier
+
+
+La variable 'definition' contient le contenu du fichier 'docker-compose.yml' en conservant sa structure.
+
+Nous pouvons ajouter un nouveau service : 
