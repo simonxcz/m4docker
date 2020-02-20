@@ -1,0 +1,97 @@
+---
+- hosts: c_mariadb1
+
+  tasks:
+    - name: Charger les variables
+      include_vars:
+        files: myvars.yaml
+
+    - name: vérification le repertoir /tmp
+      file:
+        path: /tmp
+        state: directory
+
+    - name: installer PyMySQL
+      pip:
+        name: PyMySQL
+        state: present
+
+    - name: Installer mariadb
+      apt:
+        update_cache: yes
+        name: mariadb-server
+        state: present
+
+    - name: Démarrer le service mariadb
+      service:
+        name: mysql
+        state: started
+
+    - name: récupérer le fichier initialisation
+      copy:
+        src: /tmp/mysql
+        dest: /tmp
+
+    ################# correction ############
+    - name: Créer la base de données
+      mysql_db:
+        config_file: /etc/mysql/my.cnf
+        login_user: root
+        login_unix_socket: "{{ db_socket }}"
+        name: squashtm
+        state: present
+
+    - name: Créer l'utilisateur de base de données
+      mysql_user:
+        config_file: "/etc/mysql/my.cnf"
+        login_user: root
+        login_unix_socket: "{{ db_socket }}"
+        name: "{{ db_user }}"
+        host: "%"
+        password: "{{ db_password }}"
+        state: present
+        prive: "squashtm.*:ALL"
+
+    - name: Récupérer l'adresse IP
+      shell: hostname -I
+      register: ip_address
+
+    - name: Ouvrir le port mariadb
+      replace:
+        path: /etc/mysql/mariabd.conf.d/50-server.cnf
+        regrexp: '(^\s*bind-address\s*=.*$)'
+        replace: "bind-address = {{ ip_address.stdout }}"
+        backup: yes
+      notify: Redémarrer MariaDB
+
+    - name: Copier le script d'init SQL
+      copy:
+        src: 
+        dest: /root/init_database.sql
+
+    - name: peupler la BDD
+      block:
+        - mysql_db:
+          config_file: "/etc/mysql/my.cnf"
+          login_user: root
+          login_unix_password: "{{ db_socket }}"
+          name: squashtm
+          state: import
+          target: /root/init_database.sql
+      rescue:
+        - debug:
+          msg: Impossbiel de rejouer le scrpt de peulement de la basse de donnée
+
+  handlers:
+    - name: Redémarrer MariaDB
+      service:
+        app: mysql
+        state: restarted
+---
+- hosts: squashtm
+
+  tasks:
+    - name: Redémarrer squashtm
+      service:
+        name: squash-tm
+        state: restared

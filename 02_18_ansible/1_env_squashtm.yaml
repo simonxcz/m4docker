@@ -1,0 +1,66 @@
+---
+- hosts: localhost
+
+  vars:
+    conteneurs:
+      c_squash-tm: 11.0.0.2
+      c_mariadb1: 11.0.0.3
+      c_mariadb2: 11.0.0.4
+      proxy: 11.0.0.5
+
+  tasks:
+
+    - name: vérification le repertoir /tmp
+      file:
+        path: /tmp
+        state: directory
+
+    - name: Service docker present # verifier que le module docker est disponbiel pour ansible
+      pip:
+        name: docker
+        state: present
+
+    - name: Creat network pour déployement SquashTM
+      docker_network:
+        name: sqtm
+        ipam_config:
+          - gateway: 11.0.0.254
+            iprange: 11.0.0.0/24
+            subnet: 11.0.0.0/24
+
+    - name: Deploy containers
+      docker_container:
+        name: "{{ item.key }}"
+        hostname: "{{ item.key }}"
+        image: debian_python_xc
+        state: started
+        tty: yes
+        pull: no
+        networks:
+          - name: sqtm
+            ipv4_address: "{{ item.value }}"
+      loop: "{{ conteneurs | dict2items }}"
+
+    - name: start service SSH
+      shell: for ct in $(docker ps -q) ; do docker exec -t $ct service ssh start ; done
+      
+    - name: ajout du nouveau group d'hôtes dans ansible
+      lineinfile:
+        path: /etc/ansible/hosts
+        line: '[docker_containers_sqtm]'
+        state: present
+
+    - name : ajouter des nouveaus hostname dans "etc/hosts"
+      lineinfile:
+        path: /etc/hosts
+        line: "{{ item.value }} {{ item.key }}"
+        state: present
+      loop : "{{ conteneurs | dict2items }} "
+
+    - name : ajouter des nouveau hôtes dans "ansible hosts"
+      lineinfile:
+        path: /etc/ansible/hosts
+        line: "{{ item.key }}"
+        state: present
+        insertafter: '\[docker_containers_sqtm\]'
+      loop: "{{ conteneurs | dict2items }}"

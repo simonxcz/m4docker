@@ -1,0 +1,13 @@
+########## SERVICE SquashTM ##########
+apiVersion: v1
+kind: Service
+metadata:
+  name: s-squashtm-pg
+spec:
+  selector:
+    app: squashtm-pg # if on a jouter un autre selector, donc il prend celui qui a les 2 lebals
+  ports:
+  - protocol: TCP
+    port: 8081 # port pour ouvrir à l'extérieur
+    targetPort: 8080  # port du squashtm
+  type: NodePort

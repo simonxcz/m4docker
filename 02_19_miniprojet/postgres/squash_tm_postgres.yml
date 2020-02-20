@@ -1,0 +1,39 @@
+version: '3.7'
+
+###### docker-compose : Squash-TM + Postgres #######
+
+services:
+
+  service-postgres:
+    image: postgres:9.6.12    
+    # container_name: postgres  
+    environment:
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${DB_USER}
+    volumes:
+      - "/var/lib/db-postgresql:/var/lib/postgresql/data" 
+  
+  squash-tm:
+    #depends_on:                # "depends_on" n'est pas obligatoire ici, car le "link" en bas fait par défaut un "depends_on"
+      #- squash-tm-pg
+    image: squashtest/squash-tm
+    # container_name: squash-postgres 
+    environment:
+      POSTGRES_ENV_POSTGRES_USER: ${DB_USER}
+      POSTGRES_ENV_POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_ENV_POSTGRES_DB: ${DB_DATABASE}
+    # ports:
+      # - 8090:8080/tcp
+    links:
+      - service-postgres:postgres 
+        # squash-tm-pg (= nom de service dans docker-compose.yaml) ; 
+        # postgres (= hostname qui se trouve dans container, qui doit être le même nom dans le fichier config de squash-tm)
+        # un "links" par défaut, fait fune "depends_on"
+    volumes:
+      - squash-tm-logs:/opt/squash-tm/logs
+      - squash-tm-plugins:/opt/squash-tm/plugins  
+  
+volumes:
+  squash-tm-logs:
+  squash-tm-plugins:

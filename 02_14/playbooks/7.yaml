@@ -1,0 +1,46 @@
+---
+### template
+
+- hosts: c_debian_python_xc
+
+  vars: 
+      database: database2
+
+  tasks:
+  - name: Charger les variables
+    include_vars:
+      file: secret.yaml   # pwd 12345
+
+  - name: Copier fichier config
+    template:
+      src: template-serveur-conf.j2
+      dest: /etc/mysql/mariadb.conf.d/50-server.cnf
+    notify: Redémarrer mariadb
+
+  - name: Installer le module pymysql
+    pip:
+      name: PyMySQL
+      state: present
+
+  - name: Créer une base de donnes
+    mysql_db:
+      login_unix_socket: /var/run/mysqld/mysqld.sock  # le fichier qui permet de connecter root (comme pwd de root)
+      login_user: root
+      name: "{{ database }}"
+      state: present
+
+  - name: Créer un utilisateur de la base de données
+    mysql_user:
+      login_unix_socket: /var/run/mysqld/mysqld.sock
+      login_user: root
+      name: 'toto'
+      password: "{{ my_password }}"
+      host: '%' # on peut se connecter depuis tous les 'HOST'
+      priv: "{{ database }}.*:ALL,GRANT"
+      state: present
+
+  handlers:
+    - name: Redémarrer mariadb
+      service:
+        name: mysql
+        state: restarted

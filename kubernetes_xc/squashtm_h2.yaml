@@ -1,0 +1,77 @@
+---
+########## POD SquashTM ##########
+apiVersion: v1   #apiVersion du minikube
+kind: Pod
+metadata:
+  name: p-squashtm-h2  # le regle du nom est le meme que URL
+  labels:
+    app: squashtm-h2
+spec:
+  containers:
+  - name: c-squashtm-h2
+    image: squashtest/squash-tm
+    env:
+      - name: POSTGRES_ENV_POSTGRES_USER
+        value: squashtm
+      - name: POSTGRES_ENV_POSTGRES_PASSWORD
+        value: initial_pw
+      - name: POSTGRES_ENV_POSTGRES_DB
+        value: squashtm
+    resources:
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+    ports:
+      - containerPort: 8080
+---
+########## SERVICE SquashTM ##########
+apiVersion: v1
+kind: Service
+metadata:
+  name: s-squashtm-h2  # nom de service est le cname dans tous cluster
+spec:
+  selector:
+    app: squashtm-h2 # if on a jouter un autre selector, donc il prend celui qui a les 2 lebals
+  ports:
+  - protocol: TCP
+    port: 8081 # port pour ouvrir à l'extérieur
+    targetPort: 8080  # port du squashtm
+  type: NodePort
+---
+########## POD Postgres ##########
+apiVersion: v1   #apiVersion du minikube
+kind: Pod
+metadata:
+  name: p-postgres  # le regle du nom est le meme que URL
+  labels:
+    app: postgres
+spec:
+  containers:
+  - name: c-postgres
+    image: postgres:9.6
+    env:
+    - name: POSTGRES_USER
+      value: squashtm
+    - name: POSTGRES_PASSWORD
+      value: initial_pw
+    - name: POSTGRES_DB
+      value: squashtm
+    resources:
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+    ports:
+      - containerPort: 5432
+--- 
+########## SERVICE POSTGRES ##########
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+spec:
+  selector:
+    app: postgres # if on a jouter un autre selector, donc il prend celui qui a les 2 lebals
+  ports:
+  - protocol: TCP
+    port: 5432 # port pour ouvrir à l'extérieur
+    targetPort: 5432  # port du squashtm

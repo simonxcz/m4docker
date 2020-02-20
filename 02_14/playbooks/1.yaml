@@ -1,0 +1,7 @@
+---
+- hosts: c_debian_python_xc
+  tasks:
+  - name: Copier le fichier /etc/ansible/ansible.cfg ##############
+    copy:
+      src: /etc/ansible/ansible.cfg
+      dest: /root/ansible.cfg

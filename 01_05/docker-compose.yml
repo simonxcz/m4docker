@@ -1,0 +1,31 @@
+version: '3.7'
+services:
+
+  # service : Postgres
+  service_postgres:
+    image: postgres:9.6
+    environment:
+        # POSTGRES est le nom d'argument de l'image Postgres:9.6, on ne peut pas modifié le nom ici
+        - POSTGRES_USER=${DB_USER}      
+        - POSTGRES_PASSWORD=${DB_PASSWORD}
+        - POSTGRES_DB=${DB_DATABASE}
+    volumes:
+        - vol_bd_02:/var/lib/postgresql/data
+
+  # service : SquashTM
+  con_squashtm:
+    image: img_squashtm_slim
+    ports:
+        # après avoir mapping le port 8081:8080, on peut visiter squash avec localhost:8081, on n'a pas besoin de utiliser le IP du container
+        - 8081:8080
+    links:
+        # service_postgres = nom de service ; con_postgres_96 = qui est utilisté dans container
+        - service_postgres:con_postgres_96
+    environment: 
+        # USER = is a environement variable, déclaré et utilisé dans le dockerfile de l'image SquashTM
+        USER: ${DB_USER}
+        PASSWORD: ${DB_PASSWORD}
+        DATABASE: ${DB_DATABASE}
+        
+volumes:
+    vol_bd_02:

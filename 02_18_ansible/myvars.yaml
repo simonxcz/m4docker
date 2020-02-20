@@ -1,0 +1,14 @@
+---
+
+archive_java: "https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u242-b08/OpenJDK8U-jre_x64_linux_hotspot_8u242b08.tar.gz"
+squash_key: "http://repo.squashtest.org/repo.squashtest.org.gpg.key "
+squash_repo: "deb http://repo.squashtest.org/debian buster main"
+script_sql_init_bd: "/usr/share/dbconfig-common/data/squash-tm/install/mysql"
+squash_config: "/etc/default/squash-tm"
+
+db_url:
+db_user: squash-tm
+db_password: myPWDsqaushTM
+db_socket: /var/run/mysqld/mysqld.sock
+
+mariadb2:

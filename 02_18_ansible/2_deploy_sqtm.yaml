@@ -1,0 +1,66 @@
+- hosts : c_squash-tm
+
+  vars:
+    url_java: "https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u242-b08/OpenJDK8U-jre_x64_linux_hotspot_8u242b08.tar.gz"
+    url_sqtm_key: "http://repo.squashtest.org/repo.squashtest.org.gpg.key"
+
+  tasks :
+
+    - name: Charger les variables
+      include_vars:
+        files: myvars.yaml
+
+    ######### installer java ############
+    - name : creat 'tmp' répertoire
+      file:
+        path: /tmp
+        state: directory
+
+    - name : un-archive java 8
+      unarchive:
+        src: "{{ archive_java }}"
+        dest: /opt    # /opt/jdk8u242-b08-jre/bin
+        remote_src: yes
+
+    - name : Installer java
+      alternatives:     # c'est comme set java_home
+        name : java
+        link : /usr/bin/java
+        path : /opt/jdk8u242-b08-jre/bin/java
+
+    ########### installer squash-tm ###########
+    - name : récupérer la clé du dépôt
+      apt_key :
+        url: "{{ squash_key }}"
+
+    - name : ajouter le dépôt
+      apt_repository :
+        # path: /etc/apt/sources.list.d/squash-tm.list
+        repo: "{{ squash_repo }}"
+        state: present
+
+    - name : apt-get install squash tm
+      apt:
+        name: squash-tm
+        state: present
+
+    ##### récupère le fichier sql pour initialiser la base de donné ##### 
+    - name : fetch mysql depuis c_squash-tm
+      fetch:        
+        src: "{{ script_sql_init_bd }}"
+        dest: /tmp/init_db_mysql.sql
+        flat: yes
+
+    - name: Patcher le script init de squash
+      replace:
+          backup: yes
+          path: /etc/init.d/squash-tm
+          regexp: "start-stop-daemon --stop --quiet --retry.*$"
+          replace: "start-stop-daemon --stop --quiet --retry=TERM/30/KILL/5 --pidfile ${PID_FILE} --user ${SQUASH_USER}"
+      notify: Restart squash-tm
+
+  handlers:
+      - name: Restart squash-tm
+        service:
+          name: squash-tm
+          state: restarted

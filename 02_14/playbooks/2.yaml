@@ -1,0 +1,14 @@
+---
+- hosts: c_debian_python_xc
+  tasks:
+
+  - name: 1 Installer mariadb #########
+    apt:
+      name: mariadb-server
+      state: present
+
+  - name: Démarrer mariadb
+    service:
+      name: mysql
+      state: started
+    

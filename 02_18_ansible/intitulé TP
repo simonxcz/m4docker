@@ -1,0 +1,26 @@
+TP:
+
+Déployer un environnement pour squash-tm
+- 1 docker avec squash-tm
+- 1 docker avec la base de données 
+(- 1 docker pour les sauvegardes de la base de données)
+(- 1 docker pour le proxy)
+
+
+* localhost
+* squashtm
+* bdd
+
+
+Installation de squash:
+- java 8 (https://adoptopenjdk.net/releases.html) 
+	- récupérer le tar.gz de la JRE
+	- le décompresser dans /opt
+	- utiliser le module alternatives pour installer la JRE
+- doc d'installation de squash-tm sur debian: https://sites.google.com/a/henix.fr/wiki-squash-tm/installation-and-exploitation-guide/2---installation-of-squash-tm/2---debian-ubuntu-installation
+	- récupérer la clé du dépôt
+	- ajouter le dépôt 
+- Base de données:
+	- utiliser le module mysql_db pour peupler la BDD (state: import avec le chemin du fichier sql en argument du paramètre target)
+	- les fichiers sql sur la machine squash sont dans /usr/share/dbconfig-common/data/squash-tm/install 
+

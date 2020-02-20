@@ -1,0 +1,7 @@
+version: '3.7'
+services:
+
+  # service : Cible debian python pour ansible
+  s_debian_python_xc:
+    image: debian_python_xc
+    command: service ssh start

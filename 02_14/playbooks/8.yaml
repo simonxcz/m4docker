@@ -1,0 +1,76 @@
+---
+### installer serveurs apache
+
+- hosts: c_debian_python_xc
+
+  tasks:
+
+  - name: Charger les variables
+    include_vars:
+      file: 8myvars.yaml
+
+  - name: Installer paquet apache2
+    apt:
+      name: "{{ apps }}"
+      state: present4
+
+  - name: Enregistrer hostname
+    shell: hostname
+    register: myhostname
+
+  - name: Transfer le fichier index.html
+    template:
+      src: index.html.j2
+      dest: /var/www/html/index.html
+    notify: Restart le service apache2
+
+  - name : Transférer le ficher de conf apache
+    template:
+      src: 8.j2
+      dest: "{{ reper_apache_available }}/mon_site.conf"
+    notify: Restart le service apache2
+
+  - name: Activer la nouvelle conf apache
+    file:      
+      src: "{{ reper_apache_available }}/mon_site.conf"
+      path: "{{ reper_apache_enabled }}/mon_site.conf"
+      state: link
+    notify: Restart le service apache2     # = GOTO : Redémarrer le service apache2
+
+  - name: Désactiver la conf par défaut
+    file:
+      path: "{{ reper_apache_enabled }}/000-default.conf"
+      state: absent
+    notify: Restart le service apache2
+
+  - name : Vérifier qu'Apache est démarré
+    service:
+      name: "{{ apps }}"
+      state: started
+
+
+
+  handlers:
+
+  - name: Restart le service apache2
+    service:
+      name: "{{ apps }}"
+      state: restarted
+
+  # - name: Créer une base de donnes
+  #   mysql_db:
+  #     login_unix_socket: /var/run/mysqld/mysqld.sock  # le fichier qui permet de connecter root (comme pwd de root)
+  #     login_user: root
+  #     name: "{{ database }}"
+  #     state: present
+
+  # - name: Créer un utilisateur de la base de données
+  #   mysql_user:
+  #     login_unix_socket: /var/run/mysqld/mysqld.sock
+  #     login_user: root
+  #     name: 'toto'
+  #     password: "{{ my_password }}"
+  #     host: '%' # on peut se connecter depuis tous les 'HOST'
+  #     priv: "{{ database }}.*:ALL,GRANT"
+  #     state: present
+

@@ -1,0 +1,19 @@
+- hosts: c_mariadb2
+
+- tasks:
+
+  - name: Récupérer l'adresse IP
+    shell: hostname -I
+    register: ip_address
+
+  - name: Ouvrir le port mariadb
+    replace : 
+      path: /etc/mysql/mariadb.conf.d/50-server.cnf
+      regexp:
+      replace:
+      backup: yes
+    notify: Rédemarrer mariadb
+
+  - name: Installation des dépedances
+    apt:
+      name: "{{ }}"

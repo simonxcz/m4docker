@@ -1,0 +1,8 @@
+Par équipe :
+
+    Un outil qui permet d'ajouter (ou de supprimer) des instances de SquashTM;
+    
+
+
+https://hub.docker.com/r/squashtest/squash-tm
+

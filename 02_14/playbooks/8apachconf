@@ -1,0 +1,5 @@
+<VirtualHost {{ ansible_host }}:80>
+DocumentRoot /var/www/html/index.html
+ServerName  {{ ansible_host }}
+ErrorLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>

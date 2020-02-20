@@ -1,0 +1,86 @@
+---
+- hosts: mariadb1
+
+  tasks:
+    - name: Charger les variables
+      include_vars:
+        file: variables.yaml
+
+    - name: Installer mariadb
+      apt:
+        update_cache: yes
+        name: mariadb-server
+        state: present
+
+    - name: Démarrer le service mariadb
+      service:
+        name: mysql
+        state: started
+
+    - name: Installer PyMySQL
+      pip:
+        name: PyMySQL
+        state: present
+
+    - name: Créer la base de données
+      mysql_db:
+        config_file: /etc/mysql/my.cnf
+        login_user: root
+        login_unix_socket: "{{ db_socket }}"
+        name: squashtm
+        state: present
+
+    - name: Créer l'utilisateur de base de données
+      mysql_user:
+        config_file: /etc/mysql/my.cnf
+        login_user: root
+        login_unix_socket: "{{ db_socket }}"
+        name: "{{ db_user }}"
+        host: "%"
+        password: "{{ db_password }}"
+        state: present
+        priv: "squashtm.*:ALL"
+
+    - name: Récupérer l'adresse IP
+      shell: hostname -I
+      register: ip_address
+
+    - name: Ouvrir le port mariadb
+      replace:
+        path: /etc/mysql/mariadb.conf.d/50-server.cnf
+        regexp: '(^\s*bind-address\s*=.*$)'
+        replace: "bind-address = {{ ip_address.stdout }}"
+        backup: yes
+      notify: Redémarrer MariaDB
+
+    - name: Copier le script d'init SQL
+      copy:
+        src: init_database.sql
+        dest: /root/init_database.sql
+
+    - name: Peupler la base de données
+      block:
+        - mysql_db:
+            config_file: /etc/mysql/my.cnf
+            login_user: root
+            login_unix_password: "{{ db_socket }}"
+            name: squashtm
+            state: import
+            target: /root/init_database.sql
+      rescue:
+        - debug:
+            msg: Impossible de rejouer le script de peuplement de la base
+
+  handlers:
+    - name: Redémarrer MariaDB
+      service:
+        name: mysql
+        state: restarted
+
+- hosts: squash
+
+  tasks:
+    - name: Redémarrer squash
+      service:
+        name: squash-tm
+        state: restarted

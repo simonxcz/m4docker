@@ -1,0 +1,7 @@
+version: '3.7' # c'est la version du docker-compose que veut utliser
+services:
+  service:
+    image: debian_docker_xc
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: sleep 10000

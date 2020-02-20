@@ -1,0 +1,15 @@
+# var, paquet, loop
+- hosts: c_debian_python_xc
+
+  vars:
+    paquet:
+      - pwgen
+      - gnupg2
+      - curl
+
+  tasks:
+    - name: Installer les paquets
+      apt: 
+        name: "{{ item }}"
+        state: present
+      loop: "{{ paquet }}"

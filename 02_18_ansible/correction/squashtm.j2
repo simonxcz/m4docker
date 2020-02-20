@@ -1,0 +1,14 @@
+# Default settings for Squash. This file is sourced by /bin/bash.
+
+# Extra arguments passed to JVM
+JAVA_ARGS="-Xms128m -Xmx1024m -XX:MaxPermSize=128m -Djava.awt.headless=true"
+
+# Port for HTTP connector 
+HTTP_PORT=8080 
+
+# DataBase parameters
+DB_URL="jdbc:mysql://{{ db_url }}:3306/squashtm"
+DB_TYPE="mysql" 
+DB_USERNAME="{{ db_user }}" 
+DB_PASSWORD="{{ db_password }}" 
+

@@ -1,0 +1,39 @@
+sur le contrôleur:
+
+sudo apt install docker-ce python-pip ansible
+sudo apt remove ansible
+sudo pip install ansible
+
+
+sur les docker:
+- openssh-server
+- python
+- python-pip
++ notre clé publique dans le fichier /root/.ssh/authorized_keys de l'image
+
+
+docker build -f Dockerfile -t debian_ansible:latest .
+docker run -d -h conteneur1 --name conteneur1 -it debian_ansible:latest
+docker exec -it conteneur1 /bin/bash -c 'service ssh start'
+
+
+for i in {2..5} ; do docker run -d -h conteneur${i} --name conteneur${i} -it debian_ansible:latest ; done
+for i in {2..5} ; do docker exec -it conteneur${i} /bin/bash -c 'service ssh start' ; done
+for i in {1..5} ; do docker exec -it conteneur${i} /bin/bash -c 'hostname -I' ; done
+
+
+Installer et démarrer un serveur mariadb sur les conteneurs:
+- installer le paquet mariadb-server (module apt)
+- démarrer le service mysql (module service)
+
+Reconfigurer nos mariadb pour qu'ils écoutent sur toutes les adresses:
+- se connnecte un des conteneurs
+- modifier le fichier de conf
+- sortie
+- fetch le fichier de conf depuis ce conteneur
+- on place le fichier récupéré dans un répertoire plus pratique
+- utiliser copy pour le copier sur tous nos conteneurs
+- redémarrer le service
+
+
+

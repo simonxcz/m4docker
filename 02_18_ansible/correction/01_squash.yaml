@@ -1,0 +1,61 @@
+---
+- hosts: squash
+
+  tasks:
+          - name: Charger les variables
+            include_vars:
+                    file: variables.yaml
+
+          - name: Télécharger Java 8
+            unarchive:
+                    remote_src: yes
+                    src: "{{ archive_java }}"
+                    dest: /opt
+
+          - name: Installer Java 8
+            alternatives:
+                    name: java
+                    link: /usr/bin/java
+                    path: /opt/jdk8u242-b08-jre/bin/java
+                    priority: 500
+
+          - name: Ajouter la clé du dépôt squash
+            apt_key:
+                    url: "{{ squash_key }}"
+
+          - name: Ajouter le dépôt squash
+            apt_repository:
+                    repo: "{{ squash_repo }}"
+                    state: present
+
+          - name: Installer squash-tm
+            apt:
+                    name: squash-tm
+                    state: present
+
+          - name: Récupérer le fichier de peuplement de la base mariadb
+            fetch:
+                    src: "{{ init_database }}"
+                    dest: init_database.sql
+                    flat: yes
+
+          - name: Transférer le fichier de configuration de squash-tm
+            template:
+                    src: squash-tm.j2
+                    dest: "{{ squash_config }}"
+                    backup: yes
+            notify: Redémarrer squash-tm
+
+          - name: Patcher le script init de squash
+            replace:
+                    backup: yes
+                    path: /etc/init.d/squash-tm
+                    regexp: "start-stop-daemon --stop --quiet --retry.*$"
+                    replace: "start-stop-daemon --stop --quiet --retry=TERM/30/KILL/5 --pidfile ${PID_FILE} --user ${SQUASH_USER}"
+            notify: Redémarrer squash-tm
+
+  handlers:
+          - name: Redémarrer squash-tm
+            service:
+                    name: squash-tm
+                    state: restarted

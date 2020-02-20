@@ -1,0 +1,3 @@
+apps: apache2
+reper_apache_available: /etc/apache2/sites-available
+reper_apache_enabled: /etc/apache2/sites-enabled

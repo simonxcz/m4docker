@@ -1,0 +1,35 @@
+version: '3.7'
+
+services:
+
+  service-mariadb:    
+    image: mariadb:10.2.22-bionic
+    container_name: mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE}
+    volumes:
+      - "/var/lib/mysql-db:/var/lib/mysql" 
+  
+  squash-tm:
+    image: squashtest/squash-tm
+    # depends_on:
+      # - squash-tm-md
+    environment:
+      MYSQL_ENV_MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_ENV_MYSQL_USER: ${DB_USER}
+      MYSQL_ENV_MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ENV_MYSQL_DATABASE: ${DB_DATABASE}
+    ports:
+      - 8091:8080/tcp
+    links:
+      - service-mariadb:mysql
+    volumes:
+      - squash-tm-logs:/opt/squash-tm/logs
+      - squash-tm-plugins:/opt/squash-tm/plugins  
+  
+volumes:
+  squash-tm-logs:
+  squash-tm-plugins:

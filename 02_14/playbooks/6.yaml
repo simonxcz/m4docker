@@ -1,0 +1,8 @@
+---
+
+- hosts: c_debian_python_xc
+
+  tasks:
+    - name: Afficher les noms d'hôte ##########  variable natives   ##########
+      debug:
+        msg: "Nom d'hôte: {{ ansible_host }}"

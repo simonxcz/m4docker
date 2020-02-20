@@ -1,0 +1,61 @@
+---
+- hosts: localhost
+
+  vars:
+    conteneurs:
+      squash: 10.0.0.2
+      mariadb1: 10.0.0.3
+      mariadb2: 10.0.0.4
+      proxy: 10.0.0.5
+
+  tasks:
+    - name: Installation des dépendances
+      pip:
+        name: docker
+        state: present
+
+    - name: Création du réseau
+      docker_network:
+        name: subnet0
+        ipam_config:
+          - gateway: 10.0.0.254
+            iprange: 10.0.0.0/24
+            subnet: 10.0.0.0/24
+
+    - name: Déploiement
+      docker_container:
+        name: "{{ item.key }}"
+        hostname: "{{ item.key }}"
+        image: debian_ansible:latest
+        state: started
+        tty: yes
+        pull: no
+        purge_networks: yes
+        networks:
+          - name: subnet0
+            ipv4_address: "{{ item.value }}"
+      loop: "{{ conteneurs | dict2items }}"
+
+    - name: Démarrage SSH
+      shell: for ct in $(docker ps -q) ; do docker exec -t $ct service ssh start ; done
+
+    - name: Ajout du nouveau groupe d'hôtes
+      lineinfile:
+        path: /etc/ansible/hosts
+        line: "[docker_containers]"
+        state: present
+
+    - name: Ajout des nouveaux hôtes (1/2)
+      lineinfile:
+        path: /etc/hosts
+        line: "{{ item.value }} {{ item.key }}"
+        state: present
+      loop: "{{ conteneurs | dict2items }}"
+
+    - name: Ajout des nouveaux hôtes (2/2)
+      lineinfile:
+        path: /etc/ansible/hosts
+        line: "{{ item.key }}"
+        state: present
+        insertafter: '\[docker_containers\]'
+      loop: "{{ conteneurs | dict2items }}"

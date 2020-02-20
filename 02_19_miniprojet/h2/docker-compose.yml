@@ -1,0 +1,10 @@
+version: '3.7'
+### squash-tm h2 ###
+
+services:
+
+  squash-tm-h2:
+    image: squashtest/squash-tm
+    # environement:
+    #ports:
+     # - 8081:8080/tcp

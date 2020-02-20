@@ -1,0 +1,135 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: d-squash
+spec:
+  selector:
+    matchLabels:
+      app: squashtm-pg
+  template:
+    metadata:
+      labels:
+        app: squashtm-pg
+    spec:
+      containers:
+      - name: c-squashtm-pg
+        image: squashtest/squash-tm
+        env:
+          - name: POSTGRES_ENV_POSTGRES_USER
+            valueFrom:
+              secretKeyRef:
+                  name: pg-credentials
+                  key: user
+          - name: POSTGRES_ENV_POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                  name: pg-credentials
+                  key: password
+          - name: POSTGRES_ENV_POSTGRES_DB
+            value: squashtm
+        resources:
+          limits:
+            memory: "1Gi"
+            cpu: "800m"
+        ports:
+          - containerPort: 8080
+---
+########## SERVICE SquashTM ##########
+apiVersion: v1
+kind: Service
+metadata:
+  name: s-squashtm-pg
+spec:
+  selector:
+    app: squashtm-pg # if on a jouter un autre selector, donc il prend celui qui a les 2 lebals
+  ports:
+  - protocol: TCP
+    port: 8081 # port pour ouvrir à l'extérieur
+    targetPort: 8080  # port du squashtm
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: d-postgres
+spec:
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      name: p-postgres  # le regle du nom est le meme que URL
+      labels:
+        app: postgres
+    spec:
+      volumes:
+        - name: vol-pg
+          persistentVolumeClaim:
+            claimName: pvolc-pg
+      containers:
+      - name: c-postgres
+        image: postgres:9.6
+        volumeMounts:
+          - mountPath: /var/lib/postgresql/data
+            name: vol-pg
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: pg-credentials
+              key: user
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: pg-credentials
+              key: password
+        - name: POSTGRES_DB
+          value: squashtm
+        resources:
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        ports:
+          - containerPort: 5432
+--- 
+########## SERVICE POSTGRES ##########
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+spec:
+  selector:
+    app: postgres # if on a jouter un autre selector, donc il prend celui qui a les 2 lebals
+  ports:
+  - protocol: TCP
+    port: 5432 # port pour ouvrir à l'extérieur
+    targetPort: 5432  # port du squashtm
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pvol-pg
+  labels:
+    type: local
+spec:
+  capacity: 
+    storage: 2Gi
+  accessModes:
+    - ReadWriteMany
+  storageClassName: standard
+  hostPath:
+    path: /data/pvol-pg
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvolc-pg
+  labels:
+    type: local
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 2Gi
+  volumeName: pvol-pg

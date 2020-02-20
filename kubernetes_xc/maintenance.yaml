@@ -1,0 +1,60 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: maintenance
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: maintenance-container
+  template:
+    metadata:
+      labels:
+        app: maintenance-container
+        tier: frontend
+    spec:
+      containers:
+        - name: c-maintenance-container
+          image: nginx
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: maintenance-mount
+              mountPath: /usr/share/nginx/html
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
+      volumes:
+        - name: maintenance-mount
+          persistentVolumeClaim:
+            claimName: pvolc-maintenance
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pvol-maintenance
+spec:
+  capacity:
+    storage: 5Mi
+  storageClassName: standard
+  accessModes:
+  - ReadWriteMany
+  hostPath:
+    path: /data/maintenance
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: pvolc-maintenance
+  labels:
+    type: local
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 4Mi
+  volumeName: pvol-maintenance
